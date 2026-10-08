@@ -36,3 +36,14 @@ def test_sample_product_3():
     assert "tagline" in result
     assert "body" in result
     assert len(result["body"]) > 0
+
+
+def test_falls_back_without_openai(monkeypatch):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    result = generate_marketing_copy("A workflow automation platform for product teams.")
+
+    assert isinstance(result, dict)
+    assert set(["headline", "tagline", "body"]).issubset(result)
+    assert len(result["headline"]) > 0
+    assert len(result["tagline"]) > 0
+    assert len(result["body"]) > 0

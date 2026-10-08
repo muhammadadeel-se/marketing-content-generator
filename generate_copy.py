@@ -1,82 +1,124 @@
 import os
 import json
-from dotenv import load_dotenv
-from google import genai
-from google.genai import types
+import sys
+import re
+from typing import Any
 
-# Load environment variables from .env file
+from dotenv import load_dotenv
+from openai import OpenAI
+
+# Load environment variables
 load_dotenv()
 
-def load_brand_voice(file_path="brand_voice.json"):
-    """Loads brand voice configuration from a JSON file."""
-    with open(file_path, "r") as f:
-        return json.load(f)
+
+def load_brand_voice() -> dict:
+    """Loads brand voice configuration from JSON file."""
+    brand_file = os.path.join(os.path.dirname(__file__), "brand_voice.json")
+    try:
+        with open(brand_file, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {
+            "brand_name": "TaskFlow Software",
+            "tone": "Professional, energetic, and clear",
+            "style": "Concise, benefit-focused, modern",
+            "key_phrases": [
+                "Streamline your workflow",
+                "Boost team productivity",
+                "Smart automation made simple",
+            ],
+        }
+
+
+def _build_fallback_copy(product_description: str, brand_voice: dict) -> dict:
+    """Generates a local fallback response when the AI API is unavailable."""
+    description = str(product_description or "").strip()
+    brand_name = brand_voice.get("brand_name") or brand_voice.get("company_name") or "TaskFlow Software"
+    key_phrases = brand_voice.get("key_phrases") or [
+        "Streamline your workflow",
+        "Boost team productivity",
+        "Smart automation made simple",
+    ]
+    tagline = key_phrases[0] if key_phrases else "Streamline your workflow"
+
+    normalized = re.sub(r"[^a-zA-Z0-9\s]", " ", description)
+    words = [word.lower() for word in normalized.split() if len(word) > 3 and word.lower() not in {"with", "that", "from", "your", "into", "this", "they", "team", "teams", "for", "using", "tool", "software"}]
+    focus = " ".join(words[:4]) or "workflow efficiency"
+
+    headline = f"{brand_name} turns {focus} into momentum"
+    body = (
+        f"{description or 'Built for growing teams'} helps teams move faster, reduce friction, and deliver "
+        f"with more confidence. {brand_name} keeps work clear, focused, and ready to scale."
+    )
+
+    return {
+        "headline": headline,
+        "tagline": tagline,
+        "body": body,
+    }
+
 
 def generate_marketing_copy(product_description: str) -> dict:
-    """Generates structured marketing copy using Google Gemini API based on brand voice."""
+    """Generates structured marketing copy using the OpenAI API, with a safe local fallback."""
     brand_voice = load_brand_voice()
-    
-    api_key = os.getenv("GEMINI_API_KEY")
+    api_key = os.getenv("OPENAI_API_KEY")
+
     if not api_key:
-        raise ValueError("GEMINI_API_KEY is missing from environment variables!")
+        return _build_fallback_copy(product_description, brand_voice)
 
-    client = genai.Client(api_key=api_key)
+    client = OpenAI(api_key=api_key)
 
-    brand_name = brand_voice.get('brand_name', 'TaskFlow Software')
-    tone = brand_voice.get('tone', '')
-    style = brand_voice.get('style', '')
-    target_audience = brand_voice.get('target_audience', '')
-    key_phrases = ', '.join(brand_voice.get('key_phrases', []))
+    prompt = f"""
+    You are a professional copywriter for {brand_voice.get('brand_name') or brand_voice.get('company_name', 'TaskFlow Software')}.
 
-    system_prompt = f"""
-    You are an expert marketing copywriter for {brand_name}.
-    
-    Adhere strictly to the following brand voice guidelines:
-    - Tone: {tone}
-    - Style: {style}
-    - Target Audience: {target_audience}
-    - Key Phrases to consider: {key_phrases}
+    Brand Guidelines:
+    - Tone: {brand_voice.get('tone')}
+    - Style: {brand_voice.get('style')}
+    - Key Phrases to include or align with: {', '.join(brand_voice.get('key_phrases', []))}
 
-    You must output ONLY valid JSON format with exactly these keys:
-    {{
-      "headline": "A catchy headline",
-      "tagline": "A memorable tagline",
-      "body": "A persuasive short paragraph body copy"
-    }}
-    Do not include any Markdown formatting like ```json, just raw JSON.
+    Task:
+    Generate marketing copy for the following product description:
+    "{product_description}"
+
+    Output Requirements:
+    Return ONLY a valid JSON object with the following keys:
+    - "headline": A compelling title.
+    - "tagline": A catchy one-liner.
+    - "body": A short promotional paragraph.
+
+    Do not include markdown formatting or extra text outside the JSON object.
     """
 
-    user_prompt = f"Product Description: {product_description}"
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are an expert marketing copywriter that outputs strict JSON."},
+                {"role": "user", "content": prompt},
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.7,
+        )
 
-    config = types.GenerateContentConfig(
-        system_instruction=system_prompt,
-        response_mime_type="application/json",
-        temperature=0.7,
-        automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True)
-    )
+        content = response.choices[0].message.content
+        parsed = json.loads(content)
+        if isinstance(parsed, dict) and {"headline", "tagline", "body"}.issubset(parsed):
+            return parsed
+    except Exception:
+        pass
 
-    response = client.models.generate_content(
-        model='gemini-2.5-flash',
-        contents=user_prompt,
-        config=config,
-    )
+    return _build_fallback_copy(product_description, brand_voice)
 
-    content = response.text.strip()
-    
-    # Parse and return JSON response
-    return json.loads(content)
 
 if __name__ == "__main__":
-    import sys
-    
     if len(sys.argv) > 1:
         description = sys.argv[1]
     else:
-        description = "An AI-powered task management tool that automatically prioritizes daily software engineering workflows."
+        description = "An automated workflow management tool for modern software engineering teams."
 
-    print(f"\nGenerating marketing content for:\n\"{description}\"\n")
     try:
         result = generate_marketing_copy(description)
         print(json.dumps(result, indent=2))
     except Exception as e:
-        print(f"Error generating copy: {e}")
+        print(f"Error generating copy: {e}", file=sys.stderr)
+        sys.exit(1)
