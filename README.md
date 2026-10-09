@@ -1,17 +1,20 @@
 # Marketing Content Generator with Review for TaskFlow Software
 
-A reusable, prompt-driven CLI tool that generates structured marketing content based on brand voice guidelines using AI.
+A prompt-driven CLI & Web tool that generates structured marketing content based on brand voice guidelines using OpenAI AI.
 
 ## Project Overview
-This project loads brand guidelines from `brand_voice.json` and uses LLM API integration to generate structured JSON copy (headline, tagline, and body) for given product descriptions.
+This project loads brand guidelines from `brand_voice.json` and uses LLM API integration to generate structured JSON copy (headline, tagline, and body) for given product descriptions. It includes both a CLI tool and a Flask-based Web Interface.
 
 ## Project Structure
 ```text
 marketing-content-generator/
-├── .env                  # Environment variables (API Key - ignored by Git)
-├── .gitignore            # Git ignore configuration
-├── brand_voice.json      # Brand guidelines and style configuration
-├── generate_copy.py      # Main CLI generator script
+│
+├── templates/
+│   └── index.html          # Web UI interface built with Bootstrap
 ├── tests/
-│   └── test_generate.py # Pytest suite with 3 sample product tests
-└── README.md             # Project documentation
+│   └── test_generate.py    # Unit tests for generator logic
+├── app.py                  # Flask web application server
+├── brand_voice.json        # Brand voice configuration
+├── generate_copy.py        # Core OpenAI generator function & CLI entrypoint
+├── requirements.txt        # Python dependencies
+└── README.md
