@@ -18,6 +18,6 @@ marketing-content-generator/
 ├── brand_voice.json        # Brand voice configuration & rules
 ├── generate_copy.py        # Core OpenAI generator function & CLI entrypoint
 ├── test_products.csv       # Sample batch CSV file for testing
-├── render.yaml             # Render deployment configuration
+├── vercel.json             # Vercel deployment configuration
 ├── requirements.txt        # Python dependencies
 └── README.md               # Project documentation
