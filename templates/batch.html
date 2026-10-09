@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Batch Upload - TaskFlow Marketing</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <h2 class="mb-4">Batch CSV Upload</h2>
+                {% if error %}
+                    <div class="alert alert-danger">{{ error }}</div>
+                {% endif %}
+                <div class="card p-4 shadow-sm">
+                    <form method="POST" action="/batch" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="file" class="form-label">Upload CSV File (Required Columns: Product Name, Key Features, Target Audience)</label>
+                            <input type="file" class="form-control" name="file" accept=".csv" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Process Batch CSV</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

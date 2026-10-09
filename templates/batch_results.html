@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Batch Review & Export - TaskFlow</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <h2 class="mb-4">Review Generated Marketing Copy</h2>
+        <form method="POST" action="/export">
+            <div class="table-responsive">
+                <table class="table table-bordered bg-white shadow-sm">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Product</th>
+                            <th>Headline</th>
+                            <th>Tagline</th>
+                            <th>Body</th>
+                            <th class="text-center">Approved</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in results %}
+                        <tr>
+                            <td>
+                                <strong>{{ row.product_name }}</strong>
+                                <input type="hidden" name="product_name_{{ loop.index0 }}" value="{{ row.product_name }}">
+                                <input type="hidden" name="headline_{{ loop.index0 }}" value="{{ row.headline }}">
+                                <input type="hidden" name="tagline_{{ loop.index0 }}" value="{{ row.tagline }}">
+                                <input type="hidden" name="body_{{ loop.index0 }}" value="{{ row.body }}">
+                            </td>
+                            <td>{{ row.headline }}</td>
+                            <td>{{ row.tagline }}</td>
+                            <td>{{ row.body }}</td>
+                            <td class="text-center">
+                                <input type="checkbox" class="form-check-input" name="approved_{{ loop.index0 }}" value="Yes">
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <input type="hidden" name="total_rows" value="{{ results|length }}">
+            <button type="submit" class="btn btn-success mt-3">Export Reviewed CSV</button>
+        </form>
+    </div>
+</body>
+</html>
