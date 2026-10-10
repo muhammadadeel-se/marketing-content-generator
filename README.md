@@ -4,10 +4,8 @@ A Flask-based web application that generates marketing copy (Headlines, Taglines
 
 ## Live Deployment & Submission Links
 
-* **Live Application URL:** [https://marketing-content-generator-cor3r75rc-muhammadadeel-se.vercel.app](https://marketing-content-generator-cor3r75rc-muhammadadeel-se.vercel.app)
+* **Live Application URL:** [https://marketing-content-generator.onrender.com](https://marketing-content-generator.onrender.com)
 * **GitHub Repository:** [https://github.com/muhammadadeel-se/marketing-content-generator](https://github.com/muhammadadeel-se/marketing-content-generator)
-
-> **Note on Hosting Platform:** The application is deployed live on Vercel (`vercel.json` configured) to bypass Render's credit card verification requirement while ensuring 100% uptime, fast response times, and full serverless execution.
 
 ---
 
@@ -20,14 +18,14 @@ A Flask-based web application that generates marketing copy (Headlines, Taglines
 2. **Batch CSV Processing (`/batch`):**
    * Managed via `Flask-WTF` (`BatchForm`) with file extension validation (`.csv`) and CSRF protection.
    * Accepts CSV files with columns: `Product Name`, `Key Features`, and `Target Audience`.
-   * Processes each product row concurrently through the OpenAI model.
+   * Processes each product row through the OpenAI model.
 
 3. **Interactive Review Checklist (`/batch` results):**
    * Displays generated copy in a structured table.
    * Allows non-technical reviewers to approve or disapprove individual sections (Headline, Tagline, Body Copy) via interactive checkboxes.
 
 4. **Reviewed Data Export (`/export`):**
-   * Downloads a updated `.csv` file containing the product details, copy, and approval status for each section.
+   * Downloads an updated `.csv` file containing the product details, copy, and approval status for each section.
 
 ---
 
